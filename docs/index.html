@@ -87,6 +87,7 @@
     <div id="results">
       <h3>Results</h3>
       <table id="resTable"></table>
+      <h3 id="error"></h3>
     </div>
   </body>
   <script>
@@ -104,7 +105,8 @@
     function search() {
       // H-E-B URL & encode in CORS proxy query string
       const hebURL = 'https://heb-ecom-covid-vaccine.hebdigital-prd.com/vaccine_locations.json';
-      const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(hebURL)}`
+      //const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(hebURL)}`
+      const proxyURL = `https://api.codetabs.com/v1/proxy?quest=${hebURL}`
 
       // Read & standardize user input
       var cities = document.getElementById("cities").value;
@@ -115,6 +117,12 @@
       // Request data from H-E-B server
       const fetchData = async () => {
         const req = await fetch(proxyURL);
+
+        if (!req.ok) {
+          // Open error message if fail
+          showError()
+        }
+
         data = await req.json();
       };
 
@@ -125,7 +133,9 @@
         var tableContent = "<tr><th>City</th><th>Register Link</th></tr>";
 
         // Parse the response
-        data = JSON.parse(data.contents);
+        //data = JSON.parse(data.contents);
+        console.log(data);
+        //data = JSON.parse(data);
         locations = data.locations;
         //console.log(locations)
 
@@ -154,9 +164,15 @@
       })
     }
 
-    function sleep() {
-      // 15 seconds - be responsible here, don't DDOS HEB
-      setTimeout(search, 15000)
+    function showError() {
+      // Open an error message and allow user to retry
+      document.getElementById("error").innerHTML = "~ ERROR COLLECTING DATA ~\ntry again";
+      document.getElementById("load-screen").style.display = "none";
+      document.getElementById("results").style.display = "block";
+
+      // Re-enable inputs
+      document.getElementById("cities").disabled = false;
+      document.getElementById("runBtn").disabled = false;
     }
 
     function showResults(tblData) {
@@ -168,6 +184,11 @@
       // Re-enable inputs
       document.getElementById("cities").disabled = false;
       document.getElementById("runBtn").disabled = false;
+    }
+
+    function sleep() {
+      // 15 seconds - be responsible here, don't DDOS HEB
+      setTimeout(search, 15000)
     }
   </script>
 </html>
