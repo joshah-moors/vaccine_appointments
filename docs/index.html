@@ -1,7 +1,173 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC&display=swap" rel="stylesheet">
+  </head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    #cities {
+      width: 50vw;
+    }
+
+    .header {
+      width: 40vw;
+    }
+
+    .loader {
+      animation: spin 2s linear infinite;
+      border: 16px solid #ffcccc;
+      border-radius: 50%;
+      border-top: 16px solid #ff0000;
+      height: 100px;
+      margin: 0 auto;
+      width: 100px;
+    }
+
+    #load-screen {
+      display: none;
+    }
+
+    #results {
+      border: solid #ff0000 5px;
+      display: none;
+      margin: auto;
+      padding: 10px;
+      width: 75vw;
+    }
+
+    #runBtn {
+      clear: both;
+      display: block;
+      height: auto;
+      margin: 0.5em auto;
+      width: 25vw;
+    }
+
+    #stop {
+      margin-top: 2vh;
+    }
+
+    .sub-header {
+      font-family: 'Amatic SC', cursive;
+      font-size: 1.5em;
+      margin-top: 0px;
+      padding-top: 0px;
+    }
+
+    table {
+      margin: 0 auto;
+      width: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   <body>
-    <h1>Vaccine Appointments</h1>
-    <p>test</p>
+    <img class="header" alt="HEB" src="https://thetrailfoundation.org/wp-content/uploads/2014/03/HEB-logo.jpg">
+    <h2 class="sub-header">No One Does More</h2>
+    <br>
+    <h2>Vaccine Appointment Finder</h1>
+    <br><br>
+    <label>Enter a comma-seperated list of cities:</label>
+    <br><br>
+    <input id="cities" type="text" placeholder="houston, tyler, san marcos" />
+    <button id="runBtn" onclick="run()"><strong>Run Vaccine Finder</strong></button>
+    <br>
+    <div id="load-screen">
+      <div id="loader" class="loader"></div>
+      <button id="stop" onclick="location.reload()"><strong>STOP</strong></button>
+    </div>
+    <div id="results">
+      <h3>Results</h3>
+      <table id="resTable"></table>
+    </div>
   </body>
+  <script>
+    function run() {
+      // Disable inputs & open loader
+      document.getElementById("cities").disabled = true;
+      document.getElementById("runBtn").disabled = true;
+      document.getElementById("results").style.display = "none";
+      document.getElementById("load-screen").style.display = "block";
+
+      // Begin the search loop
+      search()
+    }
+
+    function search() {
+      // H-E-B URL & encode in CORS proxy query string
+      const hebURL = 'https://heb-ecom-covid-vaccine.hebdigital-prd.com/vaccine_locations.json';
+      const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(hebURL)}`
+
+      // Read & standardize user input
+      var cities = document.getElementById("cities").value;
+      var cityArr = cities.split(",")
+        .map(function (el) { return el.trim(); })
+        .map(function (el) { return el.toLowerCase(); });
+
+      // Request data from H-E-B server
+      const fetchData = async () => {
+        const req = await fetch(proxyURL);
+        data = await req.json();
+      };
+
+      console.log("Requesting refreshed data from server")
+      fetchData().then(()=>{
+        // Initialize result table content HTML string (header row)
+        var found = false;
+        var tableContent = "<tr><th>City</th><th>Register Link</th></tr>";
+
+        // Parse the response
+        data = JSON.parse(data.contents);
+        locations = data.locations;
+        //console.log(locations)
+
+        // Iterate through the data & user input
+        for(var x = 0; x < locations.length; x++) {
+          //console.log(locations[x]['openTimeslots'])
+          let loc = locations[x].city.toLowerCase();
+          let slots = locations[x].openTimeslots;
+          let url = locations[x].url;
+          
+          if (cityArr.includes(loc) && slots > 0) {
+            // toggle found flag & add HTML for result table
+            found = true;
+            tableContent += `<tr><td>${loc}</td><td><a href="${url}" target="_blank">More Info</a></td></tr>`
+            //console.log("\n\n---------MATCH\n\n")
+          };
+        }
+
+        // Evaluate if there are results to show user
+        if (found) {
+          showResults(tableContent)
+        } else {
+          // No results, wait and retry
+          sleep()
+        }
+      })
+    }
+
+    function sleep() {
+      // 15 seconds - be responsible here, don't DDOS HEB
+      setTimeout(search, 15000)
+    }
+
+    function showResults(tblData) {
+      // Load table content, hide the loader & open results
+      document.getElementById("resTable").innerHTML = tblData;
+      document.getElementById("load-screen").style.display = "none";
+      document.getElementById("results").style.display = "block";
+
+      // Re-enable inputs
+      document.getElementById("cities").disabled = false;
+      document.getElementById("runBtn").disabled = false;
+    }
+  </script>
 </html>
