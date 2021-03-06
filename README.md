@@ -1,14 +1,14 @@
 # Vaccine Appointments
 Automatically searching for vaccine appointments
 
-# https://joshah-moors.github.io/vaccine_appointments/
+## https://joshah-moors.github.io/vaccine_appointments/
 
 This fork of the repo includes a page with the original author's Python code ported to Javascript.
 The goal here is to make the tool accessible to people without having to download and run the Python script.
 
 One consideration is that with a browser-based app, I have to use a CORS-proxy to fetch the data on-page.
-I'm not sure about the performance of this and during development I observed some kind of caching / stale results through the CORS-proxy. 
-The outstanding enhancement is testing this piece out and finding a reliable way to keep the data fresh.
+During development I observed what seemed like some kind of cache implemented at the proxy that was returning stale data.
+I switched from `api.allorigins` to `api.codetabs` for the proxy and have not seen the issue since - still something to be watchful for.
 
 # Usage
 
